@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Build Apps, Get Answers, Create Anything</title>
+    <meta name="description" content="Your AI-powered assistant that can answer questions, build custom apps, and help with anything. Free to use.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .messages {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+        
+        .avatar.user {
+            background: #667eea;
+            color: white;
+        }
+        
+        .avatar.assistant {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        .typing {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        
+        .typing-indicator {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        
+        .app-preview {
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .app-preview-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .app-preview iframe {
+            width: 100%;
+            min-height: 400px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            resize: none;
+            font-family: inherit;
+            min-height: 52px;
+            max-height: 200px;
+        }
+        
+        #userInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        #sendBtn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        #sendBtn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        
+        #sendBtn:disabled {
+            background: #e5e7eb;
+            cursor: not-allowed;
+        }
+        
+        .footer {
+            padding: 15px 20px;
+            background: #f3f4f6;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @media (max-width: 640px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+            
+            .messages-container {
+                padding: 15px;
+            }
+            
+            .input-container {
+                padding: 15px;
+            }
+            
+            .message-content {
+                padding: 12px 16px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <span style="font-size: 28px;">✨</span>
+            <div>
+                <h1>AI Assistant</h1>
+                <p>Ask anything, build apps, get help</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="messages-container" id="messagesContainer">
+        <div class="messages" id="messages">
+            <div class="message">
+                <div class="avatar assistant">🤖</div>
+                <div class="message-content">Hey! I'm your AI assistant. I can help you with anything - answer questions, build custom apps, solve problems, brainstorm ideas, or just chat. What would you like to do? 🚀
+
+Try asking me to:
+• Build you an app (like "create a todo list app")
+• Answer questions
+• Help solve a problem
+• Brainstorm ideas</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <div class="input-wrapper">
+            <textarea 
+                id="userInput" 
+                placeholder="Ask me anything or tell me what to build..."
+                rows="1"
+            ></textarea>
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Made with AI • <a href="#" onclick="alert('This is a demo AI assistant. Use responsibly and ethically.'); return false;">Terms</a> • <a href="#" onclick="alert('We do not store your conversations or personal data.'); return false;">Privacy</a>
+    </div>
+
+    <script>
+        const messagesEl = document.getElementById('messages');
+        const containerEl = document.getElementById('messagesContainer');
+        const inputEl = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        let isTyping = false;
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                containerEl.scrollTop = containerEl.scrollHeight;
+            }, 100);
+        }
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ' + role;
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesEl.appendChild(messageDiv);
+            
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = '<div class="avatar assistant">🤖</div><div class="typing-indicator"><div class="spinner"></div><span>Thinking...</span></div>';
+            
+            messagesEl.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        function detectAppRequest(text) {
+            const keywords = ['build', 'create', 'make', 'app', 'tool', 'calculator', 'tracker', 'timer', 'game', 'generate'];
+            return keywords.some(k => text.toLowerCase().includes(k));
+        }
+
+        function generateResponse(userInput) {
+            const lower = userInput.toLowerCase();
+            
+            if (lower.includes('build') || lower.includes('create') || lower.includes('make')) {
+                if (lower.includes('todo') || lower.includes('task')) {
+                    return {
+                        text: "Perfect! I'll build you a beautiful todo list app right now... ✨",
+                        shouldBuildApp: true,
+                        appType: 'todo'
+                    };
+                } else if (lower.includes('counter')) {
+                    return {
+                        text: "Great idea! Building you a counter app... ⚡",
+                        shouldBuildApp: true,
+                        appType: 'counter'
+                    };
+                } else if (lower.includes('calculator')) {
+                    return {
+                        text: "Awesome! Creating a calculator for you... 🔢",
+                        shouldBuildApp: true,
+                        appType: 'calculator'
+                    };
+                } else if (lower.includes('timer')) {
+                    return {
+                        text: "Nice! Building a timer app... ⏱️",
+                        shouldBuildApp: true,
+                        appType: 'timer'
+                    };
+                } else {
+                    return {
+                        text: "I'd love to build that for you! Let me create a custom app based on your idea... 🚀",
+                        shouldBuildApp: true,
+                        appType: 'custom'
+                    };
+                }
+            }
+            
+            if (lower.includes('how') && (lower.includes('work') || lower.includes('use'))) {
+                return {
+                    text: "Great question! Just tell me what you want to do:\n\n• Say 'build me a [type] app' and I'll create it\n• Ask me any question and I'll help answer it\n• Tell me a problem and I'll help solve it\n• Share an idea and I'll help develop it\n\nI'm here to help with anything! What would you like to do first?",
+                    shouldBuildApp: false
+                };
+            }
+            
+            if (lower.includes('what can you do') || lower.includes('help')) {
+                return {
+                    text: "I can do lots of things! Here are some examples:\n\n🛠️ Build Apps:\n• Todo lists, calculators, timers, games, trackers\n• Any custom tool you can think of\n\n💡 Answer Questions:\n• Explain concepts\n• Help solve problems\n• Give advice\n\n🎨 Creative Help:\n• Brainstorm ideas\n• Plan projects\n• Generate content\n\nWhat sounds interesting to you?",
+                    shouldBuildApp: false
+                };
+            }
+            
+            if (lower.includes('hello') || lower.includes('hi ') || lower === 'hi' || lower === 'hey') {
+                return {
+                    text: "Hey there! 👋 How can I help you today? Want to build something cool, or need help with something?",
+                    shouldBuildApp: false
+                };
+            }
+            
+            return {
+                text: "I'm here to help! Could you tell me more about what you'd like to do? I can build apps, answer questions, or help with pretty much anything. What's on your mind?",
+                shouldBuildApp: false
+            };
+        }
+
+        function generateApp(type, description) {
+            if (type === 'counter') {
+                return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Counter</title></head><body style="margin:0;padding:20px;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:system-ui"><div style="background:white;padding:60px 40px;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;max-width:400px;width:100%"><h1 style="margin:0 0 40px;color:#333;font-size:32px">🔢 Counter</h1><div style="font-size:96px;font-weight:bold;color:#667eea;margin:40px 0" id="count">0</div><div style="display:flex;gap:15px;justify-content:center;margin-bottom:20px"><button onclick="changeCount(-1)" style="padding:20px 40px;font-size:32px;background:#ff6b6b;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:bold">-</button><button onclick="changeCount(1)" style="padding:20px 40px;font-size:32px;background:#4ecdc4;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:bold">+</button></div><button onclick="resetCount()" style="padding:12px 24px;background:#f3f4f6;color:#666;border:none;border-radius:8px;cursor:pointer">Reset</button></div><script>var c=0;function changeCount(n){c=c+n;document.getElementById("count").textContent=c;}function resetCount(){c=0;document.getElementById("count").textContent=c;}<\/script></body></html>';
+            }
+            
+            if (type === 'todo') {
+                return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Todo</title></head><body style="margin:0;padding:20px;min-height:100vh;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:system-ui"><div style="max-width:600px;margin:0 auto;padding:40px;background:white;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)"><h1 style="margin:0 0 30px;color:#333;font-size:32px">✅ Todo List</h1><div style="display:flex;gap:10px;margin-bottom:30px"><input id="inp" placeholder="Add a task..." style="flex:1;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;font-size:16px"><button onclick="addTodo()" style="padding:12px 24px;background:#4ecdc4;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600">Add</button></div><div id="list"></div></div><script>var todos=[];function addTodo(){var v=document.getElementById("inp").value.trim();if(!v)return;todos.push({text:v,done:false});document.getElementById("inp").value="";renderTodos();}function toggleTodo(i){todos[i].done=!todos[i].done;renderTodos();}function delTodo(i){todos.splice(i,1);renderTodos();}function renderTodos(){var html=todos.map(function(t,i){return\'<div style="display:flex;gap:12px;align-items:center;padding:16px;background:\'+(t.done?"#f3f4f6":"#f0f9ff")+\';border-radius:8px;margin-bottom:10px"><input type="checkbox" \'+(t.done?"checked":"")+\' onchange="toggleTodo(\'+i+\')" style="width:20px;height:20px;cursor:pointer"><span style="flex:1;font-size:16px;color:\'+(t.done?"#999":"#333")+\';\'+(t.done?"text-decoration:line-through":"")+\'">\'+t.text+\'</span><button onclick="delTodo(\'+i+\')" style="padding:6px 12px;background:#ff6b6b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px">Delete</button></div>\';}).join("");document.getElementById("list").innerHTML=html||\'<p style="text-align:center;color:#999;padding:40px 0">No tasks yet!</p>\';}renderTodos();<\/script></body></html>';
+            }
+            
+            if (type === 'calculator') {
+                return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Calculator</title></head><body style="margin:0;padding:20px;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:system-ui"><div style="background:white;padding:30px;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:320px;width:100%"><h1 style="margin:0 0 20px;color:#333;text-align:center">🔢 Calculator</h1><input id="display" readonly style="width:100%;padding:20px;border:2px solid #e5e7eb;border-radius:12px;font-size:32px;text-align:right;margin-bottom:20px;background:#f9fafb" value="0"><div id="buttons" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div></div><script>var curr="0";var btns=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+"];var container=document.getElementById("buttons");btns.forEach(function(b){var btn=document.createElement("button");btn.textContent=b;btn.onclick=function(){pressCalc(b);};btn.style.cssText="padding:20px;background:"+(b==="="?"#4ecdc4":"#f3f4f6")+";color:"+(b==="="?"white":"#333")+";border:none;border-radius:8px;font-size:20px;cursor:pointer;font-weight:600";container.appendChild(btn);});var clr=document.createElement("button");clr.textContent="Clear";clr.onclick=clearCalc;clr.style.cssText="padding:20px;background:#ff6b6b;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;grid-column:span 4";container.appendChild(clr);function pressCalc(v){if(v==="="){try{curr=eval(curr).toString();}catch(e){curr="Error";}}else{curr=curr==="0"||curr==="Error"?v:curr+v;}document.getElementById("display").value=curr;}function clearCalc(){curr="0";document.getElementById("display").value=curr;}<\/script></body></html>';
+            }
+            
+            if (type === 'timer') {
+                return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Timer</title></head><body style="margin:0;padding:40px 20px;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:system-ui;text-align:center"><div style="background:white;padding:60px 40px;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:500px;width:100%"><h1 style="margin:0 0 40px;color:#333">⏱️ Timer</h1><div style="font-size:72px;font-weight:bold;color:#667eea;margin:40px 0" id="time">25:00</div><div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap"><button onclick="startTimer()" style="padding:15px 30px;background:#4ecdc4;color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:600">Start</button><button onclick="pauseTimer()" style="padding:15px 30px;background:#fbbf24;color:white;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:600">Pause</button><button onclick="resetTimer()" style="padding:15px 30px;background:#f3f4f6;color:#666;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:600">Reset</button></div></div><script>var sec=1500;var timer=null;var running=false;function updateDisplay(){var m=Math.floor(sec/60);var s=sec%60;document.getElementById("time").textContent=m+":"+(s<10?"0":"")+s;}function startTimer(){if(running)return;running=true;timer=setInterval(function(){if(sec>0){sec--;updateDisplay();}else{pauseTimer();alert("Time is up!");}},1000);}function pauseTimer(){running=false;if(timer)clearInterval(timer);}function resetTimer(){pauseTimer();sec=1500;updateDisplay();}updateDisplay();<\/script></body></html>';
+            }
+            
+            return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Your App</title></head><body style="margin:0;padding:20px;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:system-ui"><div style="background:white;padding:60px 40px;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;max-width:500px;width:100%"><div style="font-size:64px;margin-bottom:20px">✨</div><h1 style="margin:0 0 20px;color:#333">Your Custom App</h1><p style="color:#666;line-height:1.6;margin-bottom:30px">'+description+'</p><div style="padding:30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;color:white"><p style="margin:0">App preview ready! With full API integration I can create even more sophisticated custom apps.</p></div></div></body></html>';
+        }
+
+        function showApp(html) {
+            const appDiv = document.createElement('div');
+            appDiv.className = 'app-preview';
+            appDiv.innerHTML = '<div class="app-preview-header"><span style="font-size:20px">💻</span><span>Your Generated App</span></div><iframe sandbox="allow-scripts" title="Generated App"></iframe>';
+            const iframe = appDiv.querySelector('iframe');
+            iframe.srcdoc = html;
+            messagesEl.appendChild(appDiv);
+            scrollToBottom();
+        }
+
+        async function sendMessage() {
+            const text = inputEl.value.trim();
+            if (!text || isTyping) return;
+            
+            addMessage('user', text);
+            inputEl.value = '';
+            
+            isTyping = true;
+            sendBtn.disabled = true;
+            showTyping();
+            
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            hideTyping();
+            
+            const response = generateResponse(text);
+            addMessage('assistant', response.text);
+            
+            if (response.shouldBuildApp) {
+                showTyping();
+                await new Promise(resolve => setTimeout(resolve, 1200));
+                hideTyping();
+                
+                const appHtml = generateApp(response.appType, text);
+                showApp(appHtml);
+                
+                addMessage('assistant', "✨ Your app is ready! You can use it right away. Want me to build something else or make any changes?");
+            }
+            
+            isTyping = false;
+            sendBtn.disabled = false;
+            inputEl.focus();
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        inputEl.addEventListener('input', () => {
+            inputEl.style.height = 'auto';
+            inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + 'px';
+        });
+        
+        inputEl.focus();
+    </script>
+</body>
+</html>
